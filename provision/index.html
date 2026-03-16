@@ -24,7 +24,23 @@
       max-width: 620px;
     }
 
-    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #111; }
+    .nav { font-size: 0.8rem; color: #888; margin-bottom: 16px; }
+    .nav a { color: #4f46e5; text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; color: #111; }
+    .subtitle { font-size: 0.82rem; color: #888; margin-bottom: 22px; }
+
+    .compat-warn {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: #92400e;
+      margin-bottom: 18px;
+      display: none;
+    }
 
     label {
       display: block;
@@ -46,16 +62,16 @@
       margin-bottom: 14px;
       outline: none;
       transition: border-color 0.15s;
+      background: #fff;
     }
-
     input:focus { border-color: #4f46e5; }
 
     .hint { font-size: 0.75rem; color: #999; margin-top: -10px; margin-bottom: 14px; }
 
-    .row { display: flex; gap: 10px; margin-bottom: 4px; }
+    .row { display: flex; gap: 10px; }
     .row > * { flex: 1; }
 
-    button {
+    button.primary {
       width: 100%;
       padding: 11px;
       font-size: 0.95rem;
@@ -63,251 +79,612 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      background: #059669;
+      color: #fff;
+      margin-top: 4px;
+      margin-bottom: 16px;
       transition: background 0.15s;
-      margin-bottom: 20px;
     }
-
-    .btn-run   { background: #4f46e5; color: #fff; }
-    .btn-run:hover   { background: #4338ca; }
-    .btn-run:disabled { background: #a5b4fc; cursor: not-allowed; }
-    .btn-stop  { background: #ef4444; color: #fff; display: none; }
-    .btn-stop:hover  { background: #dc2626; }
+    button.primary:hover:not(:disabled) { background: #047857; }
+    button.primary:disabled { background: #9ca3af; cursor: not-allowed; }
 
     #terminal {
       background: #0f172a;
-      color: #e2e8f0;
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.82rem;
-      line-height: 1.6;
-      padding: 16px;
-      border-radius: 8px;
-      min-height: 200px;
-      max-height: 460px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      display: none;
-    }
-
-    .line-ok   { color: #86efac; }
-    .line-err  { color: #fca5a5; }
-    .line-sql  { color: #fde68a; }
-    .line-head { color: #7dd3fc; font-weight: bold; }
-
-    #copyBox {
-      display: none;
-      margin-top: 16px;
-      background: #f8faff;
-      border: 1px solid #e0e7ff;
       border-radius: 10px;
       padding: 16px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      min-height: 140px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+    #terminal .ok   { color: #4ade80; }
+    #terminal .err  { color: #f87171; }
+    #terminal .info { color: #60a5fa; }
+    #terminal .warn { color: #fbbf24; }
+    #terminal .bold { color: #f1f5f9; font-weight: 700; }
+    #terminal .dim  { color: #475569; }
+
+    #resultBox {
+      display: none;
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
     }
 
-    #copyBox h2 {
-      font-size: 0.72rem;
+    #resultBox .result-title {
+      font-size: 1rem;
       font-weight: 700;
-      color: #6366f1;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
+      color: #059669;
       margin-bottom: 12px;
     }
 
-    .copy-field {
-      margin-bottom: 10px;
+    .result-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 5px 14px;
+      font-size: 0.82rem;
+      margin-bottom: 14px;
+    }
+    .result-grid .k { color: #888; white-space: nowrap; }
+    .result-grid .v { font-family: "SF Mono", "Fira Code", monospace; color: #111; word-break: break-all; }
+
+    .copybox-label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px; }
+    .copybox {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.78rem;
+      color: #334155;
+      white-space: pre;
+      overflow-x: auto;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .copybox:hover { background: #f1f5f9; }
+
+    #saveSection {
+      display: none;
+      border-top: 1px solid #d1fae5;
+      padding-top: 14px;
     }
 
-    .copy-field:last-child { margin-bottom: 0; }
-
-    .copy-field .lbl {
-      font-size: 0.7rem;
+    .save-row { display: flex; gap: 8px; align-items: flex-end; }
+    .save-row input { margin-bottom: 0; flex: 1; }
+    .btn-save {
+      padding: 9px 16px;
+      font-size: 0.85rem;
       font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 4px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #059669;
+      color: #fff;
+      white-space: nowrap;
+      transition: background 0.15s;
     }
+    .btn-save:hover { background: #047857; }
+    .save-ok { font-size: 0.78rem; color: #059669; margin-top: 6px; display: none; }
 
-    .copy-field .value-row {
+    .toggle-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 7px;
-      padding: 8px 12px;
-    }
-
-    .copy-field .val {
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.83rem;
-      color: #111;
-      flex: 1;
-      word-break: break-all;
-    }
-
-    .copy-btn {
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      width: auto;
-      border: none;
-      border-radius: 5px;
-      background: #eef2ff;
-      color: #4f46e5;
+      gap: 10px;
+      margin-bottom: 10px;
       cursor: pointer;
-      flex-shrink: 0;
-      margin-bottom: 0;
-      transition: background 0.1s, color 0.1s;
+      user-select: none;
+    }
+    .toggle-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      margin: 0; cursor: pointer;
+      accent-color: #4f46e5;
+    }
+    .toggle-row span {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #555;
     }
 
-    .copy-btn:hover { background: #e0e7ff; }
-    .copy-btn.copied { background: #ecfdf5; color: #059669; }
+    #customKeySection {
+      display: none;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    #customKeySection label { margin-bottom: 6px; }
+    #customKeySection input { margin-bottom: 6px; }
+    #customKeySection .hint { margin-bottom: 0; }
   </style>
 </head>
 <body>
 <div class="card">
+  <div class="nav"><a href="/">&#8592; Home</a></div>
   <h1>Beacon ECDH Provisioner</h1>
+  <p class="subtitle">Uses Web Bluetooth &mdash; Chrome / Edge on macOS, Windows, Linux, Android</p>
 
-  <label>UUID (optional — leave blank to scan by name)</label>
-  <input id="uuid" placeholder="D3E5E9F4-69C9-DDEC-1765-E654C4957134" />
+  <div class="compat-warn" id="compatWarn">
+    Web Bluetooth is not supported in this browser. Please use Chrome or Edge on desktop or Android.
+  </div>
 
   <div class="row">
     <div>
-      <label>Rotation Exp</label>
+      <label>Rotation Exponent (0&ndash;15)</label>
       <input id="rotExp" type="number" value="10" min="0" max="15" />
+      <div class="hint">10 &asymp; 17 min rotation window</div>
     </div>
     <div>
-      <label>Lock Key</label>
-      <input id="lockKey" placeholder="00000000000000000000000000000000" />
+      <label>Lock Key (32 hex chars)</label>
+      <input id="lockKey" value="00000000000000000000000000000000" />
     </div>
   </div>
-  <div class="hint">Lock key default is all zeros. Rotation exp 10 = ~17 min.</div>
 
-  <button class="btn-run" id="btnRun" onclick="startProvision()">Run Provisioning</button>
-  <button class="btn-stop" id="btnStop" onclick="stopProvision()">Stop</button>
+  <label class="toggle-row" onclick="toggleCustomKey()">
+    <input type="checkbox" id="useCustomKey" onclick="event.stopPropagation(); toggleCustomKey()" />
+    <span>Use custom data instead of beacon&rsquo;s Public ECDH Key</span>
+  </label>
+
+  <div id="customKeySection">
+    <label>Custom Key (64 hex chars &mdash; 32 bytes)</label>
+    <div class="save-row">
+      <input id="customKey" placeholder="e.g. 827272F5FAC5B8AFA8DE6187D52C7031A2BEF2408D5D5CB503A56CE9C22CBC67" maxlength="64" style="margin-bottom:0; text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+      <button class="btn-save" onclick="generateCustomKey()">Generate</button>
+    </div>
+    <div class="hint" style="margin-top:6px;">This value is sent as-is in the ADV Slot Data payload. The beacon&rsquo;s Public ECDH Key characteristic will not be read.</div>
+  </div>
+
+  <button class="primary" id="connectBtn" onclick="provision()">Connect &amp; Provision</button>
 
   <div id="terminal"></div>
 
-  <div id="copyBox">
-    <h2>Result</h2>
-    <div class="copy-field">
-      <div class="lbl">Identity Key</div>
-      <div class="value-row">
-        <span class="val" id="cpKey">—</span>
-        <button class="copy-btn" onclick="copyField('cpKey', this)">Copy</button>
+  <div id="resultBox">
+    <div class="result-title">&#10003; Provisioning complete</div>
+    <div class="result-grid" id="resultGrid"></div>
+    <div class="copybox-label">Click to copy &mdash; SQL</div>
+    <div class="copybox" id="sqlCopy" onclick="copyBox(this)"></div>
+    <div id="saveSection">
+      <label style="margin-bottom:8px;">Save to Profiles</label>
+      <div class="save-row">
+        <input id="profileName" placeholder="Beacon name (e.g. Entrance A)" />
+        <button class="btn-save" onclick="saveProfile()">Save</button>
       </div>
-    </div>
-    <div class="copy-field">
-      <div class="lbl">Base Time Unix</div>
-      <div class="value-row">
-        <span class="val" id="cpBase">—</span>
-        <button class="copy-btn" onclick="copyField('cpBase', this)">Copy</button>
-      </div>
-    </div>
-    <div class="copy-field">
-      <div class="lbl">Rotation Exp</div>
-      <div class="value-row">
-        <span class="val" id="cpRot">—</span>
-        <button class="copy-btn" onclick="copyField('cpRot', this)">Copy</button>
-      </div>
+      <div class="save-ok" id="saveOk">Saved to profiles!</div>
     </div>
   </div>
 </div>
 
 <script>
-  let es = null;
-  const parsed = { key: null, base: null, rot: null };
+// ── Minimal AES-128 ECB block decrypt ─────────────────────────────────────────
+// Ported from the Python beacon_ecdh_provision.py cryptography.hazmat AES-ECB call.
 
-  function term() { return document.getElementById("terminal"); }
+const _S = new Uint8Array([
+  99,124,119,123,242,107,111,197,48,1,103,43,254,215,171,118,
+  202,130,201,125,250,89,71,240,173,212,162,175,156,164,114,192,
+  183,253,147,38,54,63,247,204,52,165,229,241,113,216,49,21,
+  4,199,35,195,24,150,5,154,7,18,128,226,235,39,178,117,
+  9,131,44,26,27,110,90,160,82,59,214,179,41,227,47,132,
+  83,209,0,237,32,252,177,91,106,203,190,57,74,76,88,207,
+  208,239,170,251,67,77,51,133,69,249,2,127,80,60,159,168,
+  81,163,64,143,146,157,56,245,188,182,218,33,16,255,243,210,
+  205,12,19,236,95,151,68,23,196,167,126,61,100,93,25,115,
+  96,129,79,220,34,42,144,136,70,238,184,20,222,94,11,219,
+  224,50,58,10,73,6,36,92,194,211,172,98,145,149,228,121,
+  231,200,55,109,141,213,78,169,108,86,244,234,101,122,174,8,
+  186,120,37,46,28,166,180,198,232,221,116,31,75,189,139,138,
+  112,62,181,102,72,3,246,14,97,53,87,185,134,193,29,158,
+  225,248,152,17,105,217,142,148,155,30,135,233,206,85,40,223,
+  140,161,137,13,191,230,66,104,65,153,45,15,176,84,187,22
+]);
 
-  function appendLine(text, cls) {
-    const t = term();
-    t.style.display = "block";
-    const line = document.createElement("span");
-    if (cls) line.className = cls;
-    line.textContent = text + "\n";
-    t.appendChild(line);
-    t.scrollTop = t.scrollHeight;
+const _Si = new Uint8Array([
+  82,9,106,213,48,54,165,56,191,64,163,158,129,243,215,251,
+  124,227,57,130,155,47,255,135,52,142,67,68,196,222,233,203,
+  84,123,148,50,166,194,35,61,238,76,149,11,66,250,195,78,
+  8,46,161,102,40,217,36,178,118,91,162,73,109,139,209,37,
+  114,248,246,100,134,104,152,22,212,164,92,204,93,101,182,146,
+  108,112,72,80,253,237,185,218,94,21,70,87,167,141,157,132,
+  144,216,171,0,140,188,211,10,247,228,88,5,184,179,69,6,
+  208,44,30,143,202,63,15,2,193,175,189,3,1,19,138,107,
+  58,145,17,65,79,103,220,234,151,242,207,206,240,180,230,115,
+  150,172,116,34,231,173,53,133,226,249,55,232,28,117,223,110,
+  71,241,26,113,29,41,197,137,111,183,98,14,170,24,190,27,
+  252,86,62,75,198,210,121,32,154,219,192,254,120,205,90,244,
+  31,221,168,51,136,7,199,49,177,18,16,89,39,128,236,95,
+  96,81,127,169,25,181,74,13,45,229,122,159,147,201,156,239,
+  160,224,59,77,174,42,245,176,200,235,187,60,131,83,153,97,
+  23,43,4,126,186,119,214,38,225,105,20,99,85,33,12,125
+]);
+
+const _RC = new Uint8Array([0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36]);
+
+function _expandKey(key) {
+  const w = new Uint32Array(44);
+  for (let i = 0; i < 4; i++)
+    w[i] = ((key[4*i]<<24)|(key[4*i+1]<<16)|(key[4*i+2]<<8)|key[4*i+3]) >>> 0;
+  for (let i = 4; i < 44; i++) {
+    let t = w[i-1];
+    if (i % 4 === 0) {
+      t = (((t<<8)|(t>>>24)) >>> 0);
+      t = ((_S[t>>>24]<<24)|(_S[(t>>>16)&0xff]<<16)|(_S[(t>>>8)&0xff]<<8)|_S[t&0xff]) >>> 0;
+      t = (t ^ (_RC[i/4-1]<<24)) >>> 0;
+    }
+    w[i] = (w[i-4] ^ t) >>> 0;
+  }
+  const rk = [];
+  for (let r = 0; r <= 10; r++) {
+    const k = new Uint8Array(16);
+    for (let i = 0; i < 4; i++) {
+      const wd = w[r*4+i];
+      k[4*i]=(wd>>>24)&0xff; k[4*i+1]=(wd>>>16)&0xff;
+      k[4*i+2]=(wd>>>8)&0xff; k[4*i+3]=wd&0xff;
+    }
+    rk.push(k);
+  }
+  return rk;
+}
+
+function _gfMul(a, n) {
+  let r = 0, t = a & 0xff;
+  for (let i = 0; i < 8; i++) { if (n&1) r^=t; t=((t<<1)^((t>>7)*0x1b))&0xff; n>>=1; }
+  return r;
+}
+
+function _imc(s, o) {
+  const a = s.slice(o, o+4);
+  s[o]  =_gfMul(a[0],0x0e)^_gfMul(a[1],0x0b)^_gfMul(a[2],0x0d)^_gfMul(a[3],0x09);
+  s[o+1]=_gfMul(a[0],0x09)^_gfMul(a[1],0x0e)^_gfMul(a[2],0x0b)^_gfMul(a[3],0x0d);
+  s[o+2]=_gfMul(a[0],0x0d)^_gfMul(a[1],0x09)^_gfMul(a[2],0x0e)^_gfMul(a[3],0x0b);
+  s[o+3]=_gfMul(a[0],0x0b)^_gfMul(a[1],0x0d)^_gfMul(a[2],0x09)^_gfMul(a[3],0x0e);
+}
+
+function aesEcbDecrypt(key, block) {
+  const rk = _expandKey(key);
+  const s  = new Uint8Array(block);
+  for (let i = 0; i < 16; i++) s[i] ^= rk[10][i];
+  for (let r = 9; r >= 1; r--) {
+    let t;
+    t=s[13];s[13]=s[9];s[9]=s[5];s[5]=s[1];s[1]=t;
+    t=s[2];s[2]=s[10];s[10]=t; t=s[6];s[6]=s[14];s[14]=t;
+    t=s[3];s[3]=s[7];s[7]=s[11];s[11]=s[15];s[15]=t;
+    for (let i = 0; i < 16; i++) s[i] = _Si[s[i]];
+    for (let i = 0; i < 16; i++) s[i] ^= rk[r][i];
+    for (let c = 0; c < 4; c++) _imc(s, c*4);
+  }
+  let t;
+  t=s[13];s[13]=s[9];s[9]=s[5];s[5]=s[1];s[1]=t;
+  t=s[2];s[2]=s[10];s[10]=t; t=s[6];s[6]=s[14];s[14]=t;
+  t=s[3];s[3]=s[7];s[7]=s[11];s[11]=s[15];s[15]=t;
+  for (let i = 0; i < 16; i++) s[i] = _Si[s[i]];
+  for (let i = 0; i < 16; i++) s[i] ^= rk[0][i];
+  return s;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toHex(b) { return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase(); }
+function fromHex(s) { const b=new Uint8Array(s.length/2); for(let i=0;i<b.length;i++) b[i]=parseInt(s.substr(i*2,2),16); return b; }
+
+// ── Terminal ──────────────────────────────────────────────────────────────────
+
+const termEl = document.getElementById('terminal');
+
+function log(msg, cls) {
+  termEl.style.display = 'block';
+  const sp = document.createElement('span');
+  if (cls) sp.className = cls;
+  sp.textContent = msg + '\n';
+  termEl.appendChild(sp);
+  termEl.scrollTop = termEl.scrollHeight;
+}
+
+// ── GATT UUIDs ────────────────────────────────────────────────────────────────
+
+const SVC_UUID    = 'a3c87500-8ed3-4bdf-8a39-a01bebede295';
+const C_REMAIN    = 'a3c8750c-8ed3-4bdf-8a39-a01bebede295';
+const C_LOCK      = 'a3c87506-8ed3-4bdf-8a39-a01bebede295';
+const C_UNLOCK    = 'a3c87507-8ed3-4bdf-8a39-a01bebede295';
+const C_SLOT      = 'a3c87502-8ed3-4bdf-8a39-a01bebede295';
+const C_ECDH      = 'a3c87508-8ed3-4bdf-8a39-a01bebede295';
+const C_EID_KEY   = 'a3c87509-8ed3-4bdf-8a39-a01bebede295';
+const C_ADV_SLOT  = 'a3c8750a-8ed3-4bdf-8a39-a01bebede295';
+
+const LOCK_LABELS = {0x00:'Locked (disallowed)', 0x01:'Locked (send key)', 0x02:'Unlocked'};
+
+async function writeChar(c, v) {
+  const p = c.properties;
+  if (p.write) {
+    await c.writeValueWithResponse(v);
+    return 'withResponse';
+  }
+  if (p.writeWithoutResponse) {
+    await c.writeValueWithoutResponse(v);
+    return 'withoutResponse';
+  }
+  throw new Error(`Characteristic ${c.uuid} has no write property`);
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+// ── Custom key toggle ─────────────────────────────────────────────────────────
+async function generateCustomKey() {
+  try {
+    // Generate a proper Curve25519 (X25519) key pair — required for beacon to accept the ECDH write
+    const keyPair = await crypto.subtle.generateKey(
+      { name: 'X25519' }, true, ['deriveKey', 'deriveBits']
+    );
+    const raw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+    document.getElementById('customKey').value = toHex(new Uint8Array(raw));
+  } catch (e) {
+    // X25519 not supported in this browser — fall back to random bytes (may not work with beacon)
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    document.getElementById('customKey').value = toHex(bytes);
+    log('Warning: X25519 key generation not supported — using random bytes. Beacon may ignore this.', 'warn');
+  }
+}
+
+function toggleCustomKey() {
+  const cb  = document.getElementById('useCustomKey');
+  const sec = document.getElementById('customKeySection');
+  sec.style.display = cb.checked ? 'block' : 'none';
+}
+
+let lastResult = null;
+
+// ── Provision ─────────────────────────────────────────────────────────────────
+
+async function provision() {
+  if (!navigator.bluetooth) {
+    document.getElementById('compatWarn').style.display = 'block';
+    return;
   }
 
-  function classifyLine(line) {
-    if (line.startsWith("INSERT") || line.startsWith("UPDATE") || line.startsWith("SELECT") || line.startsWith("VALUES") || line.startsWith("WHERE") || line.startsWith("SET ")) return "line-sql";
-    if (line.includes("✓") || line.includes("Connected") || line.includes("Unlocked") || line.includes("OK")) return "line-ok";
-    if (line.includes("Failed") || line.includes("ERROR") || line.includes("failed")) return "line-err";
-    if (line.startsWith("──") || line.startsWith("==")) return "line-head";
-    return "";
-  }
+  const rotExp  = parseInt(document.getElementById('rotExp').value, 10);
+  const lockHex = document.getElementById('lockKey').value.trim().replace(/\s/g,'');
 
-  function extractValues(line) {
-    // "  Identity Key (dec) : ABCDEF...  ← use this in DB"
-    let m = line.match(/Identity Key \(dec\)\s*:\s*([0-9a-fA-F]+)/);
-    if (m) { parsed.key = m[1]; return; }
+  if (isNaN(rotExp)||rotExp<0||rotExp>15) { alert('Rotation exponent must be 0–15.'); return; }
+  if (!/^[0-9a-fA-F]{32}$/.test(lockHex))  { alert('Lock key must be 32 hex characters.'); return; }
 
-    // "  base_time_unix     : 1773664935  (0x...)"
-    m = line.match(/base_time_unix\s*:\s*(\d+)/);
-    if (m) { parsed.base = m[1]; return; }
+  const lockKey = fromHex(lockHex);
+  const btn     = document.getElementById('connectBtn');
 
-    // "  rotation_exp       : 10"
-    m = line.match(/rotation_exp\s*:\s*(\d+)/);
-    if (m) { parsed.rot = m[1]; }
-  }
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  termEl.innerHTML = '';
+  termEl.style.display = 'none';
+  document.getElementById('resultBox').style.display = 'none';
+  lastResult = null;
 
-  function showCopyBox() {
-    if (!parsed.key && !parsed.base && !parsed.rot) return;
-    document.getElementById("cpKey").textContent  = parsed.key  || "—";
-    document.getElementById("cpBase").textContent = parsed.base || "—";
-    document.getElementById("cpRot").textContent  = parsed.rot  || "—";
-    document.getElementById("copyBox").style.display = "block";
-  }
-
-  function copyField(id, btn) {
-    const val = document.getElementById(id).textContent;
-    navigator.clipboard.writeText(val).then(() => {
-      btn.textContent = "Copied!";
-      btn.classList.add("copied");
-      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+  try {
+    log('Opening browser device picker…', 'dim');
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: 'iBKS Plus' }],
+      optionalServices: [SVC_UUID]
     });
-  }
 
-  function startProvision() {
-    const uuid     = document.getElementById("uuid").value.trim();
-    const rotExp   = document.getElementById("rotExp").value.trim();
-    const lockKey  = document.getElementById("lockKey").value.trim() || "0".repeat(32);
+    log(`Found: ${device.name}`, 'info');
+    btn.textContent = 'Provisioning…';
 
-    term().innerHTML = "";
-    term().style.display = "block";
-    document.getElementById("copyBox").style.display = "none";
-    parsed.key = parsed.base = parsed.rot = null;
-    document.getElementById("btnRun").disabled = true;
-    document.getElementById("btnStop").style.display = "block";
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService(SVC_UUID);
 
-    const params = new URLSearchParams({ rot_exp: rotExp, lock_key: lockKey });
-    if (uuid) params.append("uuid", uuid);
+    log('Connected. Reading characteristics…', 'ok');
 
-    es = new EventSource(`/api/provision/run?${params}`);
+    const useCustom  = document.getElementById('useCustomKey').checked;
+    const customHex  = document.getElementById('customKey').value.trim().replace(/\s/g,'');
+    if (useCustom && !/^[0-9a-fA-F]{64}$/.test(customHex)) {
+      throw new Error('Custom key must be exactly 64 hex characters (32 bytes).');
+    }
 
-    es.onmessage = (e) => {
-      const line = e.data;
-      if (line === "__DONE__") {
-        stopProvision();
-        showCopyBox();
-        return;
+    const chars = await Promise.all([
+      service.getCharacteristic(C_REMAIN).catch(()=>null),
+      service.getCharacteristic(C_LOCK),
+      service.getCharacteristic(C_UNLOCK),
+      service.getCharacteristic(C_SLOT),
+      useCustom ? Promise.resolve(null) : service.getCharacteristic(C_ECDH),
+      service.getCharacteristic(C_EID_KEY),
+      service.getCharacteristic(C_ADV_SLOT),
+    ]);
+    const [cRemain, cLock, cUnlock, cSlot, cECDH, cEIDKey, cAdvSlot] = chars;
+
+    // Remain connectable
+    if (cRemain) {
+      try { await writeChar(cRemain, new Uint8Array([0x01])); log('  Remain Connectable : ON', 'ok'); }
+      catch (e) { log(`  Remain Connectable : warning — ${e.message}`, 'warn'); }
+    }
+
+    // Lock state
+    const lockState = (await cLock.readValue()).getUint8(0);
+    log(`  Lock state         : 0x${lockState.toString(16).padStart(2,'0').toUpperCase()} → ${LOCK_LABELS[lockState]||'Unknown'}`, 'info');
+
+    if (lockState === 0x00) throw new Error('Unlock disallowed — cannot proceed.');
+    if (lockState === 0x01) {
+      await writeChar(cUnlock, lockKey);
+      const newState = (await cLock.readValue()).getUint8(0);
+      if (newState !== 0x02) throw new Error(`Unlock failed (state 0x${newState.toString(16).padStart(2,'0').toUpperCase()})`);
+      log('  Unlocked.', 'ok');
+    }
+
+    // Select slot 0
+    await writeChar(cSlot, new Uint8Array([0x00]));
+    log('  Active slot        : 0', 'ok');
+
+    // ECDH key — from beacon or custom input
+    let ecdhKey;
+    if (useCustom) {
+      ecdhKey = fromHex(customHex);
+      log(`\n  Custom Key (used)  : ${toHex(ecdhKey)}`, 'bold');
+    } else {
+      ecdhKey = new Uint8Array((await cECDH.readValue()).buffer);
+      if (ecdhKey.length !== 32) throw new Error(`Expected 32-byte ECDH key, got ${ecdhKey.length}`);
+      log(`\n  Public ECDH Key    : ${toHex(ecdhKey)}`, 'bold');
+    }
+
+    // Clear slot first — write empty payload to reset any existing EID config
+    log(`  Clearing slot…`, 'dim');
+    await writeChar(cAdvSlot, new Uint8Array(0));
+    await new Promise(r => setTimeout(r, 600));
+
+    // Build and write ADV Slot Data: [0x30][32-byte key][rotExp]
+    const payload = new Uint8Array(34);
+    payload[0] = 0x30;
+    payload.set(ecdhKey, 1);
+    payload[33] = rotExp;
+    log(`\n  ADV_SLOT_DATA props : write=${cAdvSlot.properties.write} withoutResponse=${cAdvSlot.properties.writeWithoutResponse}`, 'dim');
+    log(`  Writing ADV Slot Data (${payload.length} bytes):`, 'dim');
+    log(`    ${toHex(payload)}`, 'dim');
+    const writeType = await writeChar(cAdvSlot, payload);
+    log(`  Written OK (${writeType}).`, 'ok');
+
+    await new Promise(r => setTimeout(r, 1200));
+
+    // Read back
+    const slotData   = new Uint8Array((await cAdvSlot.readValue()).buffer);
+    const identEnc   = new Uint8Array((await cEIDKey.readValue()).buffer);
+
+    log(`  ADV Slot Data (raw): ${toHex(slotData)}`, 'dim');
+
+    // Parse counter (bytes 2–5 big-endian) and current EID (bytes 6–13)
+    let counter = 0, currentEID = 'n/a';
+    if (slotData.length >= 6) {
+      counter = ((slotData[2]<<24)|(slotData[3]<<16)|(slotData[4]<<8)|slotData[5]) >>> 0;
+      if (slotData.length >= 14) currentEID = toHex(slotData.slice(6,14));
+    }
+
+    const baseTimeUnix = Math.floor(Date.now()/1000) - counter;
+
+    // Decrypt identity key: AES-128 ECB using lock key
+    const identityKey = aesEcbDecrypt(lockKey, identEnc);
+
+    // Verify rotation_exp in read-back matches what we wrote
+    const readBackRotExp = slotData.length >= 2 ? slotData[1] : -1;
+    if (readBackRotExp !== rotExp) {
+      log(`\n  WARN: rotation_exp mismatch — wrote ${rotExp}, beacon returned ${readBackRotExp}`, 'warn');
+    }
+
+    log(`\n  Identity Key (enc) : ${toHex(identEnc)}`, 'dim');
+    log(`  Identity Key (dec) : ${toHex(identityKey)}  ← use this in DB`, 'ok');
+    log(`  base_time_unix     : ${baseTimeUnix}`, 'ok');
+    log(`  rotation_exp       : ${rotExp}`, 'ok');
+    log(`  Counter            : ${counter}s`, 'dim');
+    log(`  Current EID        : ${currentEID}`, 'dim');
+
+    // Cross-verify EID using the server's /api/validate
+    log(`\nVerifying EID against identity key…`, 'dim');
+    try {
+      const now = new Date().toISOString();
+      const vRes = await fetch('/api/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key:           toHex(identityKey),
+          base_time_unix: baseTimeUnix,
+          eid:           currentEID,
+          timestamp:     now,
+          rotation_exp:  rotExp
+        })
+      });
+      const v = await vRes.json();
+      if (v.valid) {
+        log(`  EID verified ✓  (offset ${v.offset_s >= 0 ? '+' : ''}${v.offset_s}s)`, 'ok');
+      } else {
+        log(`  EID mismatch ✗  expected ${v.computed}`, 'err');
+        log(`  The write may not have taken effect on the beacon.`, 'err');
       }
-      extractValues(line);
-      appendLine(line, classifyLine(line));
-    };
+    } catch (e) {
+      log(`  Verify skipped (server unreachable): ${e.message}`, 'warn');
+    }
 
-    es.onerror = () => {
-      appendLine("Connection lost.", "line-err");
-      stopProvision();
-    };
-  }
+    lastResult = { identityKey, baseTimeUnix, rotExp, currentEID };
+    showResult(lastResult);
+    device.gatt.disconnect();
 
-  function stopProvision() {
-    if (es) { es.close(); es = null; }
-    document.getElementById("btnRun").disabled = false;
-    document.getElementById("btnStop").style.display = "none";
+  } catch (err) {
+    if (err.name === 'NotFoundError') log('No device selected.', 'warn');
+    else log(`ERROR: ${err.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect & Provision';
   }
+}
+
+// ── Result ────────────────────────────────────────────────────────────────────
+
+function showResult(r) {
+  const keyHex = toHex(r.identityKey);
+  const sql = [
+    `UPDATE beacon_eid_settings`,
+    `SET archived_at = NOW()`,
+    `WHERE beacon_id = <beacon_id> AND archived_at IS NULL;`,
+    ``,
+    `INSERT INTO beacon_eid_settings (beacon_id, key, rotation_exponent, base_time_unix)`,
+    `VALUES (`,
+    `    <beacon_id>,`,
+    `    '${keyHex}',`,
+    `    ${r.rotExp},`,
+    `    ${r.baseTimeUnix}`,
+    `);`
+  ].join('\n');
+
+  const rows = [
+    ['Identity Key', keyHex],
+    ['Base Time Unix', r.baseTimeUnix],
+    ['Rotation Exp', r.rotExp],
+    ['Current EID', r.currentEID],
+  ];
+
+  document.getElementById('resultGrid').innerHTML =
+    rows.map(([k,v]) => `<div class="k">${k}</div><div class="v">${v}</div>`).join('');
+  document.getElementById('sqlCopy').textContent = sql;
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('saveSection').style.display = 'block';
+  document.getElementById('saveOk').style.display = 'none';
+}
+
+function copyBox(el) {
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const orig = el.style.background;
+    el.style.background = '#dcfce7';
+    setTimeout(() => el.style.background = orig, 800);
+  });
+}
+
+// ── Save profile ───────────────────────────────────────────────────────────────
+
+async function saveProfile() {
+  if (!lastResult) return;
+  const name = document.getElementById('profileName').value.trim();
+  if (!name) { alert('Enter a name for this beacon.'); return; }
+
+  await fetch('/api/profiles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      key: toHex(lastResult.identityKey),
+      base_time_unix: lastResult.baseTimeUnix,
+      rotation_exp: lastResult.rotExp
+    })
+  });
+
+  const ok = document.getElementById('saveOk');
+  ok.style.display = 'block';
+  setTimeout(() => ok.style.display = 'none', 3000);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+if (!navigator.bluetooth) document.getElementById('compatWarn').style.display = 'block';
 </script>
 </body>
 </html>

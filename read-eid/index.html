@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Read EID</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+      padding: 28px;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .nav { font-size: 0.8rem; color: #888; margin-bottom: 16px; }
+    .nav a { color: #4f46e5; text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; color: #111; }
+    .subtitle { font-size: 0.82rem; color: #888; margin-bottom: 22px; }
+
+    .compat-warn {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: #92400e;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    button.primary {
+      width: 100%;
+      padding: 11px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #4f46e5;
+      color: #fff;
+      margin-bottom: 20px;
+      transition: background 0.15s;
+    }
+    button.primary:hover:not(:disabled) { background: #4338ca; }
+    button.primary:disabled { background: #9ca3af; cursor: not-allowed; }
+
+    /* Reading box */
+    #readingBox {
+      display: none;
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .reading-status {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+    .dot.ok   { background: #22c55e; }
+    .dot.spin { background: #60a5fa; animation: blink 0.8s ease-in-out infinite; }
+    .dot.err  { background: #f87171; animation: none; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .eid-display {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .eid-meta {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+
+    .json-label {
+      font-size: 0.68rem;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .json-output {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      word-break: break-all;
+    }
+    .json-output:hover { background: #263248; }
+    .json-output .k { color: #94a3b8; }
+    .json-output .s { color: #86efac; }
+
+    /* Read Again button inside box */
+    #readAgainBtn {
+      display: none;
+      margin-top: 14px;
+      width: 100%;
+      padding: 9px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: #94a3b8;
+      transition: background 0.15s, color 0.15s;
+    }
+    #readAgainBtn:hover { background: #1e293b; color: #f1f5f9; }
+
+    /* History */
+    #historySection { display: none; margin-top: 20px; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 14px;
+    }
+
+    #historyList {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .history-item:hover   { background: #f1f5f9; }
+    .history-item.copied  { background: #dcfce7; border-color: #86efac; transition: background 0s; }
+    .history-item .h-eid  { flex: 1; color: #111; font-weight: 600; }
+    .history-item .h-ts   { color: #94a3b8; font-size: 0.72rem; white-space: nowrap; }
+    .history-item .h-copy { font-size: 0.68rem; color: #94a3b8; white-space: nowrap; }
+
+    /* Validate */
+    #validateSection {
+      display: none;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select {
+      width: 100%;
+      padding: 9px 11px;
+      font-size: 0.9rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+    select:focus { border-color: #4f46e5; }
+
+    button.validate-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #4f46e5;
+      color: #fff;
+      margin-bottom: 14px;
+      transition: background 0.15s;
+    }
+    button.validate-btn:hover { background: #4338ca; }
+
+    #vResult { border-radius: 10px; padding: 14px 16px; font-size: 0.85rem; display: none; }
+    #vResult.valid   { background: #ecfdf5; border: 1px solid #6ee7b7; }
+    #vResult.invalid { background: #fef2f2; border: 1px solid #fca5a5; }
+    #vResult .vstatus { font-weight: 700; margin-bottom: 8px; }
+    #vResult.valid   .vstatus { color: #059669; }
+    #vResult.invalid .vstatus { color: #dc2626; }
+    .vgrid { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 0.8rem; }
+    .vgrid .k { color: #888; }
+    .vgrid .v { font-family: "SF Mono", "Fira Code", monospace; color: #111; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="nav"><a href="/">&#8592; Home</a></div>
+  <h1>Read EID</h1>
+  <p class="subtitle">Reads the current EID from a nearby iBKS Plus via GATT</p>
+
+  <div class="compat-warn" id="compatWarn">
+    Web Bluetooth is not supported in this browser. Please use Chrome or Edge on desktop or Android.
+  </div>
+
+  <button class="primary" id="readBtn" onclick="readEID()">Connect &amp; Read EID</button>
+
+  <div id="readingBox">
+    <div class="reading-status">
+      <div class="dot" id="dotEl"></div>
+      <span id="statusText">Connecting…</span>
+    </div>
+    <div class="eid-display" id="eidDisplay">&mdash;</div>
+    <div class="eid-meta"   id="eidMeta">&nbsp;</div>
+    <div class="json-label">JSON &mdash; same format as beacon_read_eid.py (click to copy)</div>
+    <div class="json-output" id="jsonOutput" onclick="copyJSON()"></div>
+    <button id="readAgainBtn" onclick="readEID()">Read Again</button>
+  </div>
+
+  <div id="historySection">
+    <div class="section-label">Reading history</div>
+    <div id="historyList"></div>
+  </div>
+
+  <div id="validateSection">
+    <div class="section-label">Validate against a profile</div>
+    <label>Profile</label>
+    <select id="profileSelect">
+      <option value="">— select profile —</option>
+    </select>
+    <button class="validate-btn" onclick="validateCurrent()">Validate Latest EID</button>
+    <div id="vResult"></div>
+  </div>
+</div>
+
+<script>
+// ── GATT UUIDs ────────────────────────────────────────────────────────────────
+const SVC_UUID   = 'a3c87500-8ed3-4bdf-8a39-a01bebede295';
+const C_SLOT     = 'a3c87502-8ed3-4bdf-8a39-a01bebede295';
+const C_ADV_SLOT = 'a3c8750a-8ed3-4bdf-8a39-a01bebede295';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let lastReading = null;
+const history   = [];
+
+// ── Timestamp — same format as Python script (+HH:MM offset) ─────────────────
+function nowISO() {
+  const d   = new Date();
+  const off = -d.getTimezoneOffset();
+  const sign = off >= 0 ? '+' : '-';
+  const hh   = String(Math.floor(Math.abs(off) / 60)).padStart(2, '0');
+  const mm   = String(Math.abs(off) % 60).padStart(2, '0');
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 19) + sign + hh + ':' + mm;
+}
+
+function toHex(b) {
+  return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function setStatus(text, dotClass) {
+  document.getElementById('statusText').textContent = text;
+  const dot = document.getElementById('dotEl');
+  dot.className = 'dot ' + dotClass;
+}
+
+// ── Read EID via GATT ─────────────────────────────────────────────────────────
+async function readEID() {
+  if (!navigator.bluetooth) {
+    document.getElementById('compatWarn').style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('readBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  document.getElementById('readAgainBtn').style.display = 'none';
+  document.getElementById('readingBox').style.display = 'block';
+  document.getElementById('vResult').style.display = 'none';
+  setStatus('Opening browser picker…', 'spin');
+
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: 'iBKS Plus' }],
+      optionalServices: [SVC_UUID]
+    });
+
+    setStatus('Connecting to GATT…', 'spin');
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService(SVC_UUID);
+
+    // Select slot 0, then read ADV Slot Data
+    const cSlot    = await service.getCharacteristic(C_SLOT);
+    const cAdvSlot = await service.getCharacteristic(C_ADV_SLOT);
+
+    await cSlot.writeValue(new Uint8Array([0x00]));
+
+    const slotVal  = await cAdvSlot.readValue();
+    const slotData = new Uint8Array(slotVal.buffer);
+
+    device.gatt.disconnect();
+
+    // ADV Slot Data read format: [0x30][rot_exp][4-byte counter BE][8-byte EID]
+    if (slotData.length < 14 || slotData[0] !== 0x30) {
+      throw new Error(`Unexpected slot data: ${toHex(slotData)} — beacon may not be provisioned as EID`);
+    }
+
+    const eid = toHex(slotData.slice(6, 14));
+    const ts  = nowISO();
+
+    handleReading({ eid, ts });
+    await loadProfiles();
+
+  } catch (err) {
+    if (err.name !== 'NotFoundError') {
+      setStatus(err.message, 'err');
+    } else {
+      setStatus('No device selected.', 'err');
+    }
+    document.getElementById('readAgainBtn').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect & Read EID';
+  }
+}
+
+// ── Handle reading ─────────────────────────────────────────────────────────────
+function handleReading({ eid, ts }) {
+  lastReading = { eid, ts };
+  history.unshift({ eid, ts });
+  if (history.length > 20) history.pop();
+
+  setStatus('Read OK', 'ok');
+  document.getElementById('eidDisplay').textContent =
+    eid.toUpperCase().replace(/(.{4})/g, '$1 ').trim();
+  document.getElementById('eidMeta').textContent = ts;
+
+  // JSON output — identical format to Python beacon_read_eid.py
+  const raw = `{"timestamp": "${ts}", "eid": "${eid}"}`;
+  document.getElementById('jsonOutput').innerHTML =
+    `<span class="k">{"timestamp": </span><span class="s">"${ts}"</span>` +
+    `<span class="k">, "eid": </span><span class="s">"${eid}"</span><span class="k">}</span>`;
+  document.getElementById('jsonOutput').dataset.raw = raw;
+
+  document.getElementById('readAgainBtn').style.display = 'block';
+  renderHistory();
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  document.getElementById('historySection').style.display = 'block';
+  document.getElementById('historyList').innerHTML = history.map((r, i) => {
+    const raw = JSON.stringify({ timestamp: r.ts, eid: r.eid });
+    const label = i === 0 ? '<span class="h-copy">latest</span>' : '<span class="h-copy">copy</span>';
+    return `<div class="history-item" id="hist-${i}" onclick='flashCopy(this, ${JSON.stringify(raw)})'>
+      <span class="h-eid">${r.eid}</span>
+      <span class="h-ts">${r.ts}</span>
+      ${label}
+    </div>`;
+  }).join('');
+}
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function copyJSON() {
+  const raw = document.getElementById('jsonOutput').dataset.raw;
+  if (!raw) return;
+  navigator.clipboard.writeText(raw).then(() => {
+    const el = document.getElementById('jsonOutput');
+    const orig = el.style.background;
+    el.style.background = '#14532d';
+    setTimeout(() => el.style.background = orig, 700);
+  });
+}
+
+function flashCopy(el, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    el.querySelector('.h-copy').textContent = 'copied!';
+    setTimeout(() => {
+      el.classList.remove('copied');
+      el.querySelector('.h-copy').textContent = 'copy';
+    }, 1000);
+  });
+}
+
+// ── Profiles + Validate ───────────────────────────────────────────────────────
+async function loadProfiles() {
+  const res = await fetch('/api/profiles');
+  if (!res.ok) return;
+  const profiles = await res.json();
+  if (!profiles.length) return;
+
+  const sel = document.getElementById('profileSelect');
+  sel.innerHTML = '<option value="">— select profile —</option>';
+  profiles.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(p);
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+  document.getElementById('validateSection').style.display = 'block';
+}
+
+async function validateCurrent() {
+  if (!lastReading) { alert('No EID reading yet.'); return; }
+  const selVal = document.getElementById('profileSelect').value;
+  if (!selVal) { alert('Select a profile.'); return; }
+
+  const profile = JSON.parse(selVal);
+  const res = await fetch('/api/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key:            profile.key,
+      base_time_unix: profile.base_time_unix,
+      eid:            lastReading.eid,
+      timestamp:      lastReading.ts,
+      rotation_exp:   profile.rotation_exp
+    })
+  });
+
+  const d = await res.json();
+  const el = document.getElementById('vResult');
+  el.style.display = 'block';
+  el.className     = d.valid ? 'valid' : 'invalid';
+
+  const rows = d.valid
+    ? [['Rotation Exp', d.rotation_exp], ['Offset', `${d.offset_s >= 0 ? '+' : ''}${d.offset_s}s`]]
+    : [['Expected EID', d.computed]];
+  rows.push(['Counter', d.counter], ['Provisioned', d.counter_human + ' ago'], ['Rotation Window', d.rotation_window]);
+
+  el.innerHTML =
+    `<div class="vstatus">${d.valid ? '&#10003; EID Valid' : '&#10007; EID Invalid'}</div>` +
+    `<div class="vgrid">` +
+    rows.map(([k, v]) => `<div class="k">${k}</div><div class="v">${v}</div>`).join('') +
+    `</div>`;
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+if (!navigator.bluetooth) document.getElementById('compatWarn').style.display = 'block';
+</script>
+</body>
+</html>

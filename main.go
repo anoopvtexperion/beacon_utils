@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/aes"
 	"encoding/binary"
 	"encoding/hex"
@@ -10,8 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -213,7 +210,7 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			if hex.EncodeToString(eid[:]) == strings.ToLower(req.EID) {
+			if strings.ToUpper(hex.EncodeToString(eid[:])) == strings.ToUpper(req.EID) {
 				computed, _ := computeEID(keyBytes, uint32(baseCounter), uint8(req.RotationExp))
 				writeJSON(w, 200, map[string]any{
 					"valid":           true,
@@ -222,7 +219,7 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 					"counter_human":   humanDuration(time.Now().Unix() - req.BaseTimeUnix),
 					"rotation_window": humanDuration(int64(1) << rot),
 					"offset_s":        d,
-					"computed":        hex.EncodeToString(computed[:]),
+					"computed":        strings.ToUpper(hex.EncodeToString(computed[:])),
 				})
 				return
 			}
@@ -235,56 +232,10 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 		"counter":         baseCounter,
 		"counter_human":   humanDuration(time.Now().Unix() - req.BaseTimeUnix),
 		"rotation_window": humanDuration(int64(1) << req.RotationExp),
-		"computed":        hex.EncodeToString(computed[:]),
+		"computed":        strings.ToUpper(hex.EncodeToString(computed[:])),
 	})
 }
 
-func handleProvisionRun(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	rotExp  := q.Get("rot_exp")
-	lockKey := q.Get("lock_key")
-	uuid    := q.Get("uuid")
-
-	if rotExp == "" { rotExp = "10" }
-	if lockKey == "" { lockKey = strings.Repeat("00", 16) }
-
-	// path to script relative to server binary location
-	scriptPath, _ := filepath.Abs("beacon_ecdh_provision.py")
-
-	args := []string{scriptPath, "--rotation-exp", rotExp, "--lock-key", lockKey}
-	if uuid != "" {
-		args = append(args, "--uuid", uuid)
-	}
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "streaming unsupported", 500)
-		return
-	}
-
-	cmd := exec.CommandContext(r.Context(), "python3", args...)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Fprintf(w, "data: ERROR: %s\n\n", err)
-		flusher.Flush()
-		return
-	}
-	cmd.Stderr = cmd.Stdout
-	cmd.Start()
-
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		fmt.Fprintf(w, "data: %s\n\n", scanner.Text())
-		flusher.Flush()
-	}
-	cmd.Wait()
-	fmt.Fprintf(w, "data: __DONE__\n\n")
-	flusher.Flush()
-}
 
 func main() {
 	mux := http.NewServeMux()
@@ -299,14 +250,16 @@ func main() {
 	mux.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "validate/index.html")
 	})
+	mux.HandleFunc("/read-eid", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "read-eid/index.html")
+	})
 
 	// api
 	mux.HandleFunc("/api/profiles", withCORS(handleProfiles))
 	mux.HandleFunc("/api/profiles/", withCORS(handleProfiles))
 	mux.HandleFunc("/api/validate", withCORS(handleValidate))
-	mux.HandleFunc("/api/provision/run", withCORS(handleProvisionRun))
 
-	log.Println("Beacon EID Validator  → http://localhost:8765")
+log.Println("Beacon EID Validator  → http://localhost:8765")
 	log.Println("Beacon Provisioner    → http://localhost:8765/provision")
 	log.Fatal(http.ListenAndServe(":8765", mux))
 }

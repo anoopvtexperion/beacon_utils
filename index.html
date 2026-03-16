@@ -59,6 +59,7 @@
 
     .icon-purple { background: #eef2ff; }
     .icon-green  { background: #ecfdf5; }
+    .icon-blue   { background: #eff6ff; }
 
     .tool-info .name { font-size: 0.95rem; font-weight: 600; color: #111; }
     .tool-info .desc { font-size: 0.78rem; color: #888; margin-top: 2px; }
@@ -71,15 +72,23 @@
 
   <div class="links">
     <a class="tool" href="/provision">
-      <div class="icon icon-green">⚙️</div>
+      <div class="icon icon-green">&#x2699;&#xFE0F;</div>
       <div class="tool-info">
         <div class="name">Provisioner</div>
         <div class="desc">Connect to beacon, write ECDH key, get identity key + SQL</div>
       </div>
     </a>
 
+    <a class="tool" href="/read-eid">
+      <div class="icon icon-blue">&#x1F4E1;</div>
+      <div class="tool-info">
+        <div class="name">Read EID</div>
+        <div class="desc">Scan advertisement, read live EID broadcast from beacon</div>
+      </div>
+    </a>
+
     <a class="tool" href="/validate">
-      <div class="icon icon-purple">🔍</div>
+      <div class="icon icon-purple">&#x1F50D;</div>
       <div class="tool-info">
         <div class="name">EID Validator</div>
         <div class="desc">Verify EID reading against key and base time</div>

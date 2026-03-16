@@ -1,0 +1,11 @@
+services:
+  beacon:
+    build: .
+    image: beacontest:latest
+    ports:
+      - "8765:8765"
+    volumes:
+      # Persist saved profiles across container restarts.
+      # The file already exists in the repo; Docker will bind-mount it directly.
+      - ./profiles.json:/app/profiles.json
+    restart: unless-stopped
