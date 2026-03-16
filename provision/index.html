@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beacon Provisioner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+      padding: 28px;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #111; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input {
+      width: 100%;
+      padding: 9px 11px;
+      font-size: 0.9rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: #4f46e5; }
+
+    .hint { font-size: 0.75rem; color: #999; margin-top: -10px; margin-bottom: 14px; }
+
+    .row { display: flex; gap: 10px; margin-bottom: 4px; }
+    .row > * { flex: 1; }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 20px;
+    }
+
+    .btn-run   { background: #4f46e5; color: #fff; }
+    .btn-run:hover   { background: #4338ca; }
+    .btn-run:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-stop  { background: #ef4444; color: #fff; display: none; }
+    .btn-stop:hover  { background: #dc2626; }
+
+    #terminal {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      padding: 16px;
+      border-radius: 8px;
+      min-height: 200px;
+      max-height: 460px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: none;
+    }
+
+    .line-ok   { color: #86efac; }
+    .line-err  { color: #fca5a5; }
+    .line-sql  { color: #fde68a; }
+    .line-head { color: #7dd3fc; font-weight: bold; }
+
+    #copyBox {
+      display: none;
+      margin-top: 16px;
+      background: #f8faff;
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    #copyBox h2 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #6366f1;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 12px;
+    }
+
+    .copy-field {
+      margin-bottom: 10px;
+    }
+
+    .copy-field:last-child { margin-bottom: 0; }
+
+    .copy-field .lbl {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .copy-field .value-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      padding: 8px 12px;
+    }
+
+    .copy-field .val {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.83rem;
+      color: #111;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      width: auto;
+      border: none;
+      border-radius: 5px;
+      background: #eef2ff;
+      color: #4f46e5;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-bottom: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .copy-btn:hover { background: #e0e7ff; }
+    .copy-btn.copied { background: #ecfdf5; color: #059669; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Beacon ECDH Provisioner</h1>
+
+  <label>UUID (optional — leave blank to scan by name)</label>
+  <input id="uuid" placeholder="D3E5E9F4-69C9-DDEC-1765-E654C4957134" />
+
+  <div class="row">
+    <div>
+      <label>Rotation Exp</label>
+      <input id="rotExp" type="number" value="10" min="0" max="15" />
+    </div>
+    <div>
+      <label>Lock Key</label>
+      <input id="lockKey" placeholder="00000000000000000000000000000000" />
+    </div>
+  </div>
+  <div class="hint">Lock key default is all zeros. Rotation exp 10 = ~17 min.</div>
+
+  <button class="btn-run" id="btnRun" onclick="startProvision()">Run Provisioning</button>
+  <button class="btn-stop" id="btnStop" onclick="stopProvision()">Stop</button>
+
+  <div id="terminal"></div>
+
+  <div id="copyBox">
+    <h2>Result</h2>
+    <div class="copy-field">
+      <div class="lbl">Identity Key</div>
+      <div class="value-row">
+        <span class="val" id="cpKey">—</span>
+        <button class="copy-btn" onclick="copyField('cpKey', this)">Copy</button>
+      </div>
+    </div>
+    <div class="copy-field">
+      <div class="lbl">Base Time Unix</div>
+      <div class="value-row">
+        <span class="val" id="cpBase">—</span>
+        <button class="copy-btn" onclick="copyField('cpBase', this)">Copy</button>
+      </div>
+    </div>
+    <div class="copy-field">
+      <div class="lbl">Rotation Exp</div>
+      <div class="value-row">
+        <span class="val" id="cpRot">—</span>
+        <button class="copy-btn" onclick="copyField('cpRot', this)">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let es = null;
+  const parsed = { key: null, base: null, rot: null };
+
+  function term() { return document.getElementById("terminal"); }
+
+  function appendLine(text, cls) {
+    const t = term();
+    t.style.display = "block";
+    const line = document.createElement("span");
+    if (cls) line.className = cls;
+    line.textContent = text + "\n";
+    t.appendChild(line);
+    t.scrollTop = t.scrollHeight;
+  }
+
+  function classifyLine(line) {
+    if (line.startsWith("INSERT") || line.startsWith("UPDATE") || line.startsWith("SELECT") || line.startsWith("VALUES") || line.startsWith("WHERE") || line.startsWith("SET ")) return "line-sql";
+    if (line.includes("✓") || line.includes("Connected") || line.includes("Unlocked") || line.includes("OK")) return "line-ok";
+    if (line.includes("Failed") || line.includes("ERROR") || line.includes("failed")) return "line-err";
+    if (line.startsWith("──") || line.startsWith("==")) return "line-head";
+    return "";
+  }
+
+  function extractValues(line) {
+    // "  Identity Key (dec) : ABCDEF...  ← use this in DB"
+    let m = line.match(/Identity Key \(dec\)\s*:\s*([0-9a-fA-F]+)/);
+    if (m) { parsed.key = m[1]; return; }
+
+    // "  base_time_unix     : 1773664935  (0x...)"
+    m = line.match(/base_time_unix\s*:\s*(\d+)/);
+    if (m) { parsed.base = m[1]; return; }
+
+    // "  rotation_exp       : 10"
+    m = line.match(/rotation_exp\s*:\s*(\d+)/);
+    if (m) { parsed.rot = m[1]; }
+  }
+
+  function showCopyBox() {
+    if (!parsed.key && !parsed.base && !parsed.rot) return;
+    document.getElementById("cpKey").textContent  = parsed.key  || "—";
+    document.getElementById("cpBase").textContent = parsed.base || "—";
+    document.getElementById("cpRot").textContent  = parsed.rot  || "—";
+    document.getElementById("copyBox").style.display = "block";
+  }
+
+  function copyField(id, btn) {
+    const val = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(val).then(() => {
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    });
+  }
+
+  function startProvision() {
+    const uuid     = document.getElementById("uuid").value.trim();
+    const rotExp   = document.getElementById("rotExp").value.trim();
+    const lockKey  = document.getElementById("lockKey").value.trim() || "0".repeat(32);
+
+    term().innerHTML = "";
+    term().style.display = "block";
+    document.getElementById("copyBox").style.display = "none";
+    parsed.key = parsed.base = parsed.rot = null;
+    document.getElementById("btnRun").disabled = true;
+    document.getElementById("btnStop").style.display = "block";
+
+    const params = new URLSearchParams({ rot_exp: rotExp, lock_key: lockKey });
+    if (uuid) params.append("uuid", uuid);
+
+    es = new EventSource(`/api/provision/run?${params}`);
+
+    es.onmessage = (e) => {
+      const line = e.data;
+      if (line === "__DONE__") {
+        stopProvision();
+        showCopyBox();
+        return;
+      }
+      extractValues(line);
+      appendLine(line, classifyLine(line));
+    };
+
+    es.onerror = () => {
+      appendLine("Connection lost.", "line-err");
+      stopProvision();
+    };
+  }
+
+  function stopProvision() {
+    if (es) { es.close(); es = null; }
+    document.getElementById("btnRun").disabled = false;
+    document.getElementById("btnStop").style.display = "none";
+  }
+</script>
+</body>
+</html>

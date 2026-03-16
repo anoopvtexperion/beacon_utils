@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EID Validator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+      padding: 28px;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .nav { font-size: 0.8rem; color: #888; margin-bottom: 16px; }
+    .nav a { color: #4f46e5; text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #111; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 9px 11px;
+      font-size: 0.9rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+
+    input:focus, textarea:focus, select:focus { border-color: #4f46e5; }
+
+    textarea { resize: vertical; min-height: 60px; font-size: 0.82rem; }
+
+    .hint { font-size: 0.75rem; color: #999; margin-top: -10px; margin-bottom: 14px; }
+
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      margin-top: 4px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 14px;
+    }
+
+    .band-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      margin-bottom: 14px;
+    }
+
+    .band-row select { margin-bottom: 0; flex: 1; }
+
+    .btn-sm {
+      padding: 9px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .btn-save   { background: #ecfdf5; color: #059669; }
+    .btn-save:hover { background: #d1fae5; }
+    .btn-delete { background: #fef2f2; color: #dc2626; }
+    .btn-delete:hover { background: #fee2e2; }
+
+    button.primary {
+      width: 100%;
+      padding: 11px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #4f46e5;
+      color: #fff;
+      margin-top: 4px;
+      margin-bottom: 16px;
+      transition: background 0.15s;
+    }
+    button.primary:hover { background: #4338ca; }
+
+    button.secondary {
+      width: 100%;
+      padding: 9px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #fff;
+      color: #555;
+      margin-bottom: 16px;
+      transition: background 0.15s;
+    }
+    button.secondary:hover { background: #f9fafb; }
+
+    #result {
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    #result.valid   { background: #ecfdf5; border: 1px solid #6ee7b7; }
+    #result.invalid { background: #fef2f2; border: 1px solid #fca5a5; }
+
+    #result .status {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    #result.valid   .status { color: #059669; }
+    #result.invalid .status { color: #dc2626; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      font-size: 0.82rem;
+    }
+
+    .result-grid .k { color: #888; }
+    .result-grid .v { font-family: "SF Mono", "Fira Code", monospace; color: #111; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="nav"><a href="/">← Home</a></div>
+  <h1>EID Validator</h1>
+
+  <!-- Band (saved settings) -->
+  <div class="section-label">Beacon Band</div>
+
+  <div class="band-row">
+    <select id="bandSelect" onchange="loadBand()">
+      <option value="">— select saved band —</option>
+    </select>
+    <button class="btn-sm btn-delete" onclick="deleteBand()" title="Delete selected band">Delete</button>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Identity Key (32 hex)</label>
+      <input id="key" placeholder="748F96FB43B1AACF..." />
+    </div>
+    <div>
+      <label>Rotation Exp (0–15)</label>
+      <input id="rotExp" type="number" value="10" min="0" max="15" />
+    </div>
+  </div>
+
+  <label>Base Time Unix</label>
+  <input id="baseTime" placeholder="1773664935" />
+
+  <div class="row" style="margin-bottom:14px;">
+    <input id="bandName" placeholder="Band name (e.g. Beacon A)" style="margin-bottom:0;" />
+    <button class="btn-sm btn-save" onclick="saveBand()">Save Band</button>
+  </div>
+
+  <!-- JSON paste -->
+  <div class="section-label">Reading</div>
+
+  <label>Paste JSON (auto-fills EID + Timestamp)</label>
+  <textarea id="jsonPaste" placeholder='{"eid":"9a75...","timestamp":"2026-03-16T18:39:30+05:30"}' oninput="parseJSON()"></textarea>
+
+  <div class="row">
+    <div>
+      <label>EID (16 hex chars)</label>
+      <input id="eid" placeholder="9a75c2d8e1f04b3a" />
+    </div>
+    <div>
+      <label>Timestamp (RFC3339)</label>
+      <input id="timestamp" placeholder="2026-03-16T18:39:30+05:30" />
+    </div>
+  </div>
+
+  <button class="primary" onclick="validate()">Validate EID</button>
+  <button class="secondary" onclick="clearResult()">Clear</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+  // ── Profiles ──────────────────────────────────────────────────────────────
+
+  async function fetchBands() {
+    const res = await fetch("/api/profiles");
+    return res.ok ? res.json() : [];
+  }
+
+  async function refreshBandList(selectName) {
+    const bands = await fetchBands();
+    const sel = document.getElementById("bandSelect");
+    const prev = selectName || sel.value;
+    sel.innerHTML = "<option value=''>— select saved band —</option>";
+    bands.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.name;
+      opt.textContent = b.name;
+      sel.appendChild(opt);
+    });
+    if (prev) sel.value = prev;
+    return bands;
+  }
+
+  function loadBand() {
+    const name = document.getElementById("bandSelect").value;
+    if (!name) return;
+    fetchBands().then(bands => {
+      const b = bands.find(x => x.name === name);
+      if (!b) return;
+      document.getElementById("key").value      = b.key;
+      document.getElementById("baseTime").value = b.base_time_unix;
+      document.getElementById("rotExp").value   = b.rotation_exp;
+      document.getElementById("bandName").value = b.name;
+    });
+  }
+
+  async function saveBand() {
+    const name    = document.getElementById("bandName").value.trim();
+    const key     = document.getElementById("key").value.trim();
+    const base    = document.getElementById("baseTime").value.trim();
+    const rotExp  = parseInt(document.getElementById("rotExp").value, 10);
+
+    if (!name)  { alert("Enter a band name."); return; }
+    if (!key)   { alert("Enter the identity key."); return; }
+    if (!base)  { alert("Enter base time unix."); return; }
+    if (isNaN(rotExp) || rotExp < 0 || rotExp > 15) { alert("Rotation exp must be 0–15."); return; }
+
+    await fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, key, base_time_unix: parseInt(base, 10), rotation_exp: rotExp })
+    });
+    await refreshBandList(name);
+  }
+
+  async function deleteBand() {
+    const name = document.getElementById("bandSelect").value;
+    if (!name) return;
+    if (!confirm(`Delete band "${name}"?`)) return;
+    await fetch(`/api/profiles/${encodeURIComponent(name)}`, { method: "DELETE" });
+    document.getElementById("bandName").value = "";
+    await refreshBandList("");
+  }
+
+  // ── JSON paste ────────────────────────────────────────────────────────────
+
+  function parseJSON() {
+    const raw = document.getElementById("jsonPaste").value.trim();
+    if (!raw) return;
+    try {
+      const obj = JSON.parse(raw);
+      if (obj.eid)       document.getElementById("eid").value       = obj.eid;
+      if (obj.timestamp) document.getElementById("timestamp").value = obj.timestamp;
+    } catch (_) {}
+  }
+
+  // ── Validate ──────────────────────────────────────────────────────────────
+
+  async function validate() {
+    const key      = document.getElementById("key").value.trim();
+    const baseTime = parseInt(document.getElementById("baseTime").value.trim(), 10);
+    const eid      = document.getElementById("eid").value.trim();
+    const ts       = document.getElementById("timestamp").value.trim();
+    const rotExp   = parseInt(document.getElementById("rotExp").value, 10);
+
+    const res = await fetch("/api/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, base_time_unix: baseTime, eid, timestamp: ts, rotation_exp: rotExp })
+    });
+
+    const data = await res.json();
+    if (data.error) { showResult(false, { error: data.error }); return; }
+    showResult(data.valid, data);
+  }
+
+  function showResult(valid, data) {
+    const el = document.getElementById("result");
+    el.style.display = "block";
+    el.className = valid ? "valid" : "invalid";
+
+    if (data.error) {
+      el.innerHTML = `<div class="status">Error</div><div>${data.error}</div>`;
+      return;
+    }
+
+    const rows = [];
+    if (valid) {
+      rows.push(["EID", "valid"]);
+      rows.push(["Rotation Exp", data.rotation_exp]);
+      rows.push(["Offset", `${data.offset_s >= 0 ? "+" : ""}${data.offset_s}s`]);
+    } else {
+      rows.push(["EID", "invalid"]);
+      rows.push(["Expected", data.computed]);
+    }
+    rows.push(["Counter", data.counter]);
+    rows.push(["Provisioned", data.counter_human + " ago"]);
+    rows.push(["Rotation Window", data.rotation_window]);
+
+    const grid = rows.map(([k, v]) =>
+      `<div class="k">${k}</div><div class="v">${v}</div>`
+    ).join("");
+
+    el.innerHTML = `
+      <div class="status">${valid ? "✓ EID Valid" : "✗ EID Invalid"}</div>
+      <div class="result-grid">${grid}</div>`;
+  }
+
+  function clearResult() {
+    const el = document.getElementById("result");
+    el.style.display = "none";
+    el.className = "";
+    el.innerHTML = "";
+    document.getElementById("jsonPaste").value = "";
+    document.getElementById("eid").value = "";
+    document.getElementById("timestamp").value = "";
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  refreshBandList();
+</script>
+</body>
+</html>
