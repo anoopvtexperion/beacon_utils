@@ -222,8 +222,8 @@
   <div class="row">
     <div>
       <label>Rotation Exponent (0&ndash;15)</label>
-      <input id="rotExp" type="number" value="10" min="0" max="15" />
-      <div class="hint">10 &asymp; 17 min rotation window</div>
+      <input id="rotExp" type="number" value="10" min="0" max="15" oninput="updateRotHint(this.value)" />
+      <div class="hint" id="rotHint">10 &asymp; 17 min 4 s rotation window</div>
     </div>
     <div>
       <label>Lock Key (32 hex chars)</label>
@@ -683,8 +683,23 @@ async function saveProfile() {
   setTimeout(() => ok.style.display = 'none', 3000);
 }
 
+// ── Rotation hint ─────────────────────────────────────────────────────────────
+
+function updateRotHint(val) {
+  const n = parseInt(val, 10);
+  const el = document.getElementById('rotHint');
+  if (isNaN(n) || n < 0 || n > 15) { el.textContent = ''; return; }
+  const secs = 1 << n;
+  let label;
+  if (secs < 60) label = `${secs} s`;
+  else if (secs < 3600) label = `${Math.floor(secs/60)} min ${secs%60} s`;
+  else { const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60; label=`${h} h ${m} min ${s} s`; }
+  el.textContent = `${n} ≈ ${label} rotation window`;
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 if (!navigator.bluetooth) document.getElementById('compatWarn').style.display = 'block';
+updateRotHint(10);
 </script>
 </body>
 </html>

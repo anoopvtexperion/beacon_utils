@@ -1,5 +1,6 @@
 services:
   beacon:
+    build: .
     image: anoopvt/beacon_utils:latest
     ports:
       - "8765:8765"
