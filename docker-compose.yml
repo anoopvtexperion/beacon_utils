@@ -9,3 +9,4 @@ services:
 
 volumes:
   beacon_data:
+    name: beacon_data

@@ -17,5 +17,6 @@ COPY read-eid/ read-eid/
 # Default empty profiles store (overridden by volume mount in production)
 RUN echo '[]' > profiles.json
 
+VOLUME ["/app"]
 EXPOSE 8765
 CMD ["./beacontest"]
